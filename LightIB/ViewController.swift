@@ -6,10 +6,14 @@
 //
 
 import UIKit
+import AVKit
 
 class ViewController: UIViewController {
     
-    var isLightOn: Bool = true
+    var isFlashlightOn: Bool = false
+    var colors: [UIColor] = [.red, .yellow, .green]
+    var colorCounter = 0
+    
     override var prefersStatusBarHidden: Bool {
         return true
     }
@@ -19,15 +23,30 @@ class ViewController: UIViewController {
         updateUI()
     }
 
-    @IBAction func buttonPressed() {
-        isLightOn.toggle()
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        isFlashlightOn.toggle()
+        colorCounter += 1
+        toggleTorch(on: isFlashlightOn)
         updateUI()
-        print(#line, #function)
     }
     
     func updateUI() {
-        view.backgroundColor = isLightOn ? .white : .black
+        view.backgroundColor = colors[colorCounter % colors.count]
     }
     
+    func toggleTorch(on: Bool) {
+        guard
+            let device = AVCaptureDevice.default(for: AVMediaType.video),
+            device.hasTorch
+        else { return }
+
+        do {
+            try device.lockForConfiguration()
+            device.torchMode = on ? .on : .off
+            device.unlockForConfiguration()
+        } catch {
+            print("Torch could not be used")
+        }
+    }
 }
 
